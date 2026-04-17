@@ -6,6 +6,16 @@ Build a **view-only** positions dashboard that mirrors Schwab's positions page b
 
 **Stack:** Vue 3 frontend, Node.js/Express backend, Schwab Trader API (read-only usage).
 
+## Current Implementation Status (as of 2026-04-17)
+
+- [x] Phase 0B complete: mock data files and mock mode contract are implemented.
+- [x] Phase 0C complete: schema validation is implemented and used before merge logic.
+- [~] Phase 0A in progress: developer portal registration/approval is manual and still pending.
+- [~] Phase 2 in progress: lot merge, filtering, and API routes are implemented in mock mode; live Schwab fetch/pagination/cache/retry are still pending.
+- [~] Phase 3 in progress: dashboard UI, filters, sorting, and polling are implemented; composable/type architecture refactor is still pending.
+- [ ] Phase 1 not started: OAuth login/callback/logout and token lifecycle are not implemented yet.
+- [ ] Phase 4 not started: full polish and edge-case pass is not complete yet.
+
 ---
 
 ## Scope & Design Decisions (Locked In)
@@ -58,11 +68,11 @@ These decisions are finalized to avoid scope creep and design paralysis.
 
 ---
 
-## Phase 0: Schwab Developer Setup + Mock Data Contract
+## Phase 0: Schwab Developer Setup + Mock Data Contract [IN PROGRESS]
 
 **Goal:** Get API access approved AND build a mock data layer so frontend/backend can progress independently.
 
-### 0A: Developer Portal Registration
+### 0A: Developer Portal Registration [NOT STARTED]
 
 1. **Create a Schwab Developer Portal account** at `developer.schwab.com/register` (separate from brokerage login).
 2. **Register an application** under Dashboard > Create App.
@@ -73,7 +83,7 @@ These decisions are finalized to avoid scope creep and design paralysis.
 
 **Known gotcha:** Callback URL must match *exactly* in the portal and your code, including trailing slashes. Mismatch produces a silent 401.
 
-### 0B: Mock Data Contract Layer
+### 0B: Mock Data Contract Layer [COMPLETE]
 
 While waiting for Schwab approval, define the exact data shapes and build mock endpoints so frontend and backend can develop in parallel.
 
@@ -183,7 +193,7 @@ mocks/
 
 **Backend runs in mock mode** when `SCHWAB_MOCK=true` in `.env`. All `/api/*` routes return data from mock files. Frontend doesn't know the difference.
 
-### 0C: Response Schema Validation
+### 0C: Response Schema Validation [COMPLETE]
 
 Define Zod schemas (or JSON Schema) for every Schwab response shape. Validate on every API call so breaking changes from Schwab fail loudly with a clear error instead of silently corrupting data.
 
@@ -208,7 +218,7 @@ If validation fails: log the raw response, return a structured error to the fron
 
 ---
 
-## Phase 1: Backend — OAuth & Token Management
+## Phase 1: Backend — OAuth & Token Management [NOT STARTED]
 
 **Goal:** Reliable, auto-refreshing read-only authentication.
 
@@ -266,7 +276,7 @@ Frontend displays this as a yellow banner.
 
 ---
 
-## Phase 2: Backend — Core Data Endpoints (Read-Only)
+## Phase 2: Backend — Core Data Endpoints (Read-Only) [IN PROGRESS]
 
 **Goal:** Backend routes that fetch, merge, and serve lot-level position data.
 
@@ -381,7 +391,7 @@ When Schwab is unavailable and cached data is served, include a top-level metada
 
 ---
 
-## Phase 3: Frontend — Positions Table
+## Phase 3: Frontend — Positions Table [IN PROGRESS]
 
 **Goal:** Vue 3 SPA that renders the lot-level positions table.
 
@@ -460,7 +470,7 @@ Day Change: +$285.40 (+0.55%) | Showing 12 of 18 lots
 
 ---
 
-## Phase 4: Polish & Edge Cases
+## Phase 4: Polish & Edge Cases [NOT STARTED]
 
 **Goal:** Handle the real-world messiness.
 
