@@ -13,7 +13,7 @@ Build a **view-only** positions dashboard that mirrors Schwab's positions page b
 - [~] Phase 0A in progress: developer portal registration/approval is manual and still pending.
 - [~] Phase 2 in progress: lot merge, filtering, and API routes are implemented in mock mode; live Schwab fetch/pagination/cache/retry are still pending.
 - [~] Phase 3 in progress: dashboard UI, filters, sorting, and polling are implemented; composable/type architecture refactor is still pending.
-- [ ] Phase 1 not started: OAuth login/callback/logout and token lifecycle are not implemented yet.
+- [~] Phase 1 in progress: OAuth login/callback/logout routes and token persistence/refresh scaffolding are implemented; live credential validation remains pending.
 - [ ] Phase 4 not started: full polish and edge-case pass is not complete yet.
 
 ---
@@ -218,7 +218,7 @@ If validation fails: log the raw response, return a structured error to the fron
 
 ---
 
-## Phase 1: Backend — OAuth & Token Management [NOT STARTED]
+## Phase 1: Backend — OAuth & Token Management [IN PROGRESS]
 
 **Goal:** Reliable, auto-refreshing read-only authentication.
 
