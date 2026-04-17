@@ -1,0 +1,29 @@
+{
+  "AAPL": {
+    "assetMainType": "EQUITY",
+    "symbol": "AAPL",
+    "quote": {
+      "lastPrice": 185,
+      "netChange": 2.3,
+      "netPercentChangeInDouble": 1.26
+    }
+  },
+  "MSFT": {
+    "assetMainType": "EQUITY",
+    "symbol": "MSFT",
+    "quote": {
+      "lastPrice": 414,
+      "netChange": -1.25,
+      "netPercentChangeInDouble": -0.3
+    }
+  },
+  "VTI": {
+    "assetMainType": "EQUITY",
+    "symbol": "VTI",
+    "quote": {
+      "lastPrice": 223,
+      "netChange": 1.12,
+      "netPercentChangeInDouble": 0.5
+    }
+  }
+}

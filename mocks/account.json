@@ -1,0 +1,10 @@
+{
+  "securitiesAccount": {
+    "accountNumber": "123456789",
+    "currentBalances": {
+      "liquidationValue": 52340.5,
+      "cashBalance": 1200,
+      "availableFunds": 1200
+    }
+  }
+}

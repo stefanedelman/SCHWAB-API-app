@@ -4,3 +4,5 @@ backend/node_modules/
 frontend/dist/
 .env
 .DS_Store
+token.json
+cache/

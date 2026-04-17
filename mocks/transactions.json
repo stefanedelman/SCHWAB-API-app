@@ -1,0 +1,115 @@
+[
+  {
+    "activityId": 200001,
+    "time": "2026-03-15T14:30:00+0000",
+    "type": "TRADE",
+    "status": "VALID",
+    "tradeDate": "2026-03-14T00:00:00+0000",
+    "settlementDate": "2026-03-17T00:00:00+0000",
+    "netAmount": -1425.07,
+    "transferItems": [
+      {
+        "instrument": {
+          "assetType": "EQUITY",
+          "symbol": "AAPL",
+          "description": "APPLE INC"
+        },
+        "amount": 10,
+        "cost": 1425,
+        "price": 142.5,
+        "feeType": "COMMISSION",
+        "positionEffect": "OPENING"
+      }
+    ]
+  },
+  {
+    "activityId": 200002,
+    "time": "2026-04-01T15:45:00+0000",
+    "type": "TRADE",
+    "status": "VALID",
+    "tradeDate": "2026-04-01T00:00:00+0000",
+    "settlementDate": "2026-04-03T00:00:00+0000",
+    "netAmount": -2146.2,
+    "transferItems": [
+      {
+        "instrument": {
+          "assetType": "EQUITY",
+          "symbol": "AAPL",
+          "description": "APPLE INC"
+        },
+        "amount": 15,
+        "cost": 2145,
+        "price": 143,
+        "feeType": "COMMISSION",
+        "positionEffect": "OPENING"
+      }
+    ]
+  },
+  {
+    "activityId": 200003,
+    "time": "2026-02-05T16:00:00+0000",
+    "type": "TRADE",
+    "status": "VALID",
+    "tradeDate": "2026-02-05T00:00:00+0000",
+    "settlementDate": "2026-02-09T00:00:00+0000",
+    "netAmount": -5839.11,
+    "transferItems": [
+      {
+        "instrument": {
+          "assetType": "EQUITY",
+          "symbol": "MSFT",
+          "description": "MICROSOFT CORP"
+        },
+        "amount": 15,
+        "cost": 5838,
+        "price": 389.2,
+        "feeType": "COMMISSION",
+        "positionEffect": "OPENING"
+      }
+    ]
+  },
+  {
+    "activityId": 200004,
+    "time": "2026-01-22T13:00:00+0000",
+    "type": "DIVIDEND_OR_INTEREST",
+    "status": "VALID",
+    "tradeDate": "2026-01-22T00:00:00+0000",
+    "settlementDate": "2026-01-25T00:00:00+0000",
+    "netAmount": -2200,
+    "transferItems": [
+      {
+        "instrument": {
+          "assetType": "EQUITY",
+          "symbol": "VTI",
+          "description": "VANGUARD TOTAL STOCK MARKET ETF"
+        },
+        "amount": 10,
+        "cost": 2200,
+        "price": 220,
+        "positionEffect": "OPENING"
+      }
+    ]
+  },
+  {
+    "activityId": 200005,
+    "time": "2026-04-10T14:15:00+0000",
+    "type": "TRADE",
+    "status": "CANCELLED",
+    "tradeDate": "2026-04-10T00:00:00+0000",
+    "settlementDate": "2026-04-13T00:00:00+0000",
+    "netAmount": -400,
+    "transferItems": [
+      {
+        "instrument": {
+          "assetType": "EQUITY",
+          "symbol": "AAPL",
+          "description": "APPLE INC"
+        },
+        "amount": 2,
+        "cost": 400,
+        "price": 200,
+        "positionEffect": "OPENING"
+      }
+    ]
+  }
+]

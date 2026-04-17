@@ -1,0 +1,54 @@
+{
+  "securitiesAccount": {
+    "accountNumber": "123456789",
+    "currentBalances": {
+      "liquidationValue": 52340.5,
+      "cashBalance": 1200,
+      "availableFunds": 1200
+    },
+    "positions": [
+      {
+        "shortQuantity": 0,
+        "averagePrice": 142.5,
+        "currentDayProfitLoss": 57.5,
+        "currentDayProfitLossPercentage": 1.26,
+        "longQuantity": 25,
+        "marketValue": 4625,
+        "instrument": {
+          "assetType": "EQUITY",
+          "cusip": "037833100",
+          "symbol": "AAPL",
+          "description": "APPLE INC"
+        }
+      },
+      {
+        "shortQuantity": 0,
+        "averagePrice": 389.2,
+        "currentDayProfitLoss": -18.75,
+        "currentDayProfitLossPercentage": -0.3,
+        "longQuantity": 15,
+        "marketValue": 6210,
+        "instrument": {
+          "assetType": "EQUITY",
+          "cusip": "594918104",
+          "symbol": "MSFT",
+          "description": "MICROSOFT CORP"
+        }
+      },
+      {
+        "shortQuantity": 0,
+        "averagePrice": 220,
+        "currentDayProfitLoss": 45.2,
+        "currentDayProfitLossPercentage": 0.5,
+        "longQuantity": 40,
+        "marketValue": 8920,
+        "instrument": {
+          "assetType": "EQUITY",
+          "cusip": "922908769",
+          "symbol": "VTI",
+          "description": "VANGUARD TOTAL STOCK MARKET ETF"
+        }
+      }
+    ]
+  }
+}

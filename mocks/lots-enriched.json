@@ -1,0 +1,32 @@
+{
+  "stale": false,
+  "cachedAt": "2026-04-17T18:30:00.000Z",
+  "lots": [
+    {
+      "id": "200001-0",
+      "symbol": "AAPL",
+      "description": "APPLE INC",
+      "purchaseDate": "2026-03-15T14:30:00.000Z",
+      "purchaseDateKnown": true,
+      "quantity": 10,
+      "costPerShare": 142.5,
+      "costBasis": 1425.07,
+      "currentPrice": 185,
+      "marketValue": 1850,
+      "dayChange": 2.3,
+      "dayChangePct": 1.26,
+      "totalGainLoss": 424.93,
+      "totalGainLossPct": 29.82
+    }
+  ],
+  "summary": {
+    "totalMarketValue": 1850,
+    "totalCostBasis": 1425.07,
+    "totalGainLoss": 424.93,
+    "totalGainLossPct": 29.82,
+    "totalDayChange": 23,
+    "totalDayChangePct": 1.26,
+    "lotsDisplayed": 1,
+    "lotsTotal": 1
+  }
+}
