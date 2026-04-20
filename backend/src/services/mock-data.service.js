@@ -100,9 +100,9 @@ function buildLotFromTransaction(transaction, transferItem, transferItemIndex, q
     return null;
   }
 
-  const transferCost = Number(
+  const transferCost = Math.abs(Number(
     transferItem.cost ?? Number(transferItem.price || 0) * quantity,
-  );
+  ));
   const costPerShare = quantity ? transferCost / quantity : 0;
   const costBasis = transferCost + allocatedFee;
 
@@ -152,6 +152,63 @@ function buildOrphanLot(position, quote) {
     totalGainLoss: round2(totalGainLoss),
     totalGainLossPct: costBasis ? round2((totalGainLoss / costBasis) * 100) : 0,
   };
+}
+
+function recalculateLotForQuantity(lot, nextQuantity) {
+  const quantity = round2(Math.max(Number(nextQuantity || 0), 0));
+  const costPerShare = Number(lot.costPerShare || 0);
+  const currentPrice = Number(lot.currentPrice || 0);
+  const costBasis = round2(costPerShare * quantity);
+  const marketValue = round2(currentPrice * quantity);
+  const totalGainLoss = round2(marketValue - costBasis);
+
+  return {
+    ...lot,
+    quantity,
+    costBasis,
+    marketValue,
+    totalGainLoss,
+    totalGainLossPct: costBasis ? round2((totalGainLoss / costBasis) * 100) : 0,
+  };
+}
+
+function reconcileKnownLotsToCurrentPositions(lots, positions) {
+  const lotsBySymbol = new Map();
+
+  lots.forEach((lot) => {
+    if (!lot.purchaseDateKnown) {
+      return;
+    }
+
+    if (!lotsBySymbol.has(lot.symbol)) {
+      lotsBySymbol.set(lot.symbol, []);
+    }
+
+    lotsBySymbol.get(lot.symbol).push(lot);
+  });
+
+  positions.forEach((position) => {
+    const symbol = position.instrument.symbol;
+    const knownLots = lotsBySymbol.get(symbol) || [];
+
+    if (!knownLots.length) {
+      return;
+    }
+
+    const heldQuantity = Number(position.longQuantity || 0);
+    const knownQuantity = knownLots.reduce((sum, lot) => sum + Number(lot.quantity || 0), 0);
+
+    if (!knownQuantity || knownQuantity <= heldQuantity + 0.000001) {
+      return;
+    }
+
+    const scaleFactor = heldQuantity / knownQuantity;
+
+    knownLots.forEach((lot) => {
+      const updated = recalculateLotForQuantity(lot, Number(lot.quantity || 0) * scaleFactor);
+      Object.assign(lot, updated);
+    });
+  });
 }
 
 function calculateSummary(lots, totalLotsCount) {
@@ -227,6 +284,7 @@ function buildLotsResponseFromPayloads(payloads, { from, to }) {
         return (
           item.instrument.assetType === 'EQUITY' &&
           heldSymbols.has(item.instrument.symbol) &&
+          Number(item.amount || 0) > 0 &&
           item.positionEffect === 'OPENING'
         );
       });
@@ -237,7 +295,7 @@ function buildLotsResponseFromPayloads(payloads, { from, to }) {
 
       const transferTotal = openingItems.reduce((sum, item) => {
         const quantity = Math.abs(Number(item.amount || 0));
-        const cost = Number(item.cost ?? Number(item.price || 0) * quantity);
+        const cost = Math.abs(Number(item.cost ?? Number(item.price || 0) * quantity));
         return sum + cost;
       }, 0);
 
@@ -246,7 +304,7 @@ function buildLotsResponseFromPayloads(payloads, { from, to }) {
 
       openingItems.forEach((item, index) => {
         const quantity = Math.abs(Number(item.amount || 0));
-        const itemCost = Number(item.cost ?? Number(item.price || 0) * quantity);
+        const itemCost = Math.abs(Number(item.cost ?? Number(item.price || 0) * quantity));
         const allocation = transferTotal ? (itemCost / transferTotal) * extraFees : 0;
 
         const lot = buildLotFromTransaction(
@@ -267,6 +325,18 @@ function buildLotsResponseFromPayloads(payloads, { from, to }) {
           round2(Number(knownQuantityBySymbol.get(lot.symbol) || 0) + lot.quantity),
         );
       });
+    });
+
+  reconcileKnownLotsToCurrentPositions(lots, positions);
+
+  knownQuantityBySymbol.clear();
+  lots
+    .filter((lot) => lot.purchaseDateKnown)
+    .forEach((lot) => {
+      knownQuantityBySymbol.set(
+        lot.symbol,
+        round2(Number(knownQuantityBySymbol.get(lot.symbol) || 0) + Number(lot.quantity || 0)),
+      );
     });
 
   positions.forEach((position) => {
