@@ -29,7 +29,7 @@ const emit = defineEmits(['sort-change']);
 const columns = [
   { key: 'symbol', label: 'Symbol' },
   { key: 'description', label: 'Description' },
-  { key: 'purchaseDate', label: 'Purchase Date' },
+  { key: 'purchaseDate', label: 'Most Recent Purchase' },
   { key: 'quantity', label: 'Qty' },
   { key: 'costPerShare', label: 'Cost/Share' },
   { key: 'costBasis', label: 'Cost Basis' },
@@ -83,6 +83,11 @@ const groupedLots = computed(() => {
       ...group,
       currentPriceAvg: group.quantityTotal ? group.weightedPriceTotal / group.quantityTotal : 0,
       costPerShareAvg: group.quantityTotal ? group.costBasisTotal / group.quantityTotal : 0,
+      mostRecentPurchaseDate: group.lots
+        .filter((lot) => lot.purchaseDateKnown && lot.purchaseDate)
+        .map((lot) => new Date(lot.purchaseDate).getTime())
+        .filter((value) => Number.isFinite(value))
+        .reduce((max, current) => Math.max(max, current), Number.NEGATIVE_INFINITY),
       totalGainLossPct: group.costBasisTotal
         ? (group.totalGainLossTotal / group.costBasisTotal) * 100
         : 0,
@@ -176,7 +181,7 @@ function sortArrow(columnKey) {
               {{ group.symbol }}
             </td>
             <td class="description" :title="group.description">{{ group.description }}</td>
-            <td>{{ group.lots.length === 1 ? formatDate(group.lots[0].purchaseDateKnown ? group.lots[0].purchaseDate : null) : `${group.lots.length} lots` }}</td>
+            <td>{{ formatDate(Number.isFinite(group.mostRecentPurchaseDate) ? group.mostRecentPurchaseDate : null) }}</td>
             <td>{{ formatQuantity(group.quantityTotal) }}</td>
             <td>{{ formatCurrency(group.costPerShareAvg) }}</td>
             <td>{{ formatCurrency(group.costBasisTotal) }}</td>
