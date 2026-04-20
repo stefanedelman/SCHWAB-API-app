@@ -11,6 +11,8 @@ defineProps({
 const callbackUrl = ref('');
 const completeLoading = ref(false);
 const completeError = ref('');
+const AUTH_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.PROD ? '/backend' : '');
+const authLoginHref = `${AUTH_BASE}/auth/login`;
 
 async function completeOauth() {
   if (!callbackUrl.value.trim()) {
@@ -22,7 +24,7 @@ async function completeOauth() {
   completeError.value = '';
 
   try {
-    const response = await fetch('/auth/complete', {
+    const response = await fetch(`${AUTH_BASE}/auth/complete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -66,7 +68,7 @@ async function completeOauth() {
 
       <a
         v-if="!authStatus.authenticated && authStatus.mode !== 'mock'"
-        href="/auth/login"
+        :href="authLoginHref"
         class="auth-action"
       >
         Login with Schwab
@@ -74,7 +76,7 @@ async function completeOauth() {
 
       <div v-if="!authStatus.authenticated && authStatus.mode !== 'mock'" class="complete-shell">
         <label class="complete-label" for="callback-url">
-          After Schwab redirects to 127.0.0.1, paste the full URL here:
+          After Schwab redirects back, paste the full URL here:
         </label>
         <div class="complete-row">
           <input
@@ -82,7 +84,7 @@ async function completeOauth() {
             v-model="callbackUrl"
             class="complete-input"
             type="text"
-            placeholder="https://127.0.0.1/?code=..."
+            placeholder="https://your-domain/.../?code=..."
           >
           <button
             type="button"
