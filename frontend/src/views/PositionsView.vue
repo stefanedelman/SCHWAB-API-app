@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import AuthBanner from '../components/AuthBanner.vue';
 import DateRangeFilter from '../components/DateRangeFilter.vue';
@@ -79,12 +79,16 @@ const selectedPreset = ref('ALL');
 const customFrom = ref('');
 const customTo = ref('');
 const symbolFilter = ref('');
+const costBasisMin = ref('');
+const costBasisMax = ref('');
 const sortKey = ref('purchaseDate');
 const sortDirection = ref('desc');
 const accountSummary = ref(null);
 const authStatus = ref(null);
 const staleInfo = ref({ stale: false, cachedAt: null });
 const marketOpen = ref(false);
+
+const FILTER_STORAGE_KEY = 'schwab-dashboard-filters-v1';
 
 let quotePollTimer = null;
 
@@ -217,6 +221,67 @@ async function onApplyCustomRange() {
   await loadLots();
 }
 
+function restoreFilterState() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(FILTER_STORAGE_KEY);
+    if (!raw) {
+      return;
+    }
+
+    const saved = JSON.parse(raw);
+
+    if (typeof saved.selectedPreset === 'string') {
+      selectedPreset.value = saved.selectedPreset;
+    }
+    if (typeof saved.customFrom === 'string') {
+      customFrom.value = saved.customFrom;
+    }
+    if (typeof saved.customTo === 'string') {
+      customTo.value = saved.customTo;
+    }
+    if (typeof saved.symbolFilter === 'string') {
+      symbolFilter.value = saved.symbolFilter;
+    }
+    if (typeof saved.costBasisMin === 'string') {
+      costBasisMin.value = saved.costBasisMin;
+    }
+    if (typeof saved.costBasisMax === 'string') {
+      costBasisMax.value = saved.costBasisMax;
+    }
+    if (typeof saved.sortKey === 'string') {
+      sortKey.value = saved.sortKey;
+    }
+    if (saved.sortDirection === 'asc' || saved.sortDirection === 'desc') {
+      sortDirection.value = saved.sortDirection;
+    }
+  } catch {
+    // Ignore bad localStorage payloads.
+  }
+}
+
+function persistFilterState() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const payload = {
+    selectedPreset: selectedPreset.value,
+    customFrom: customFrom.value,
+    customTo: customTo.value,
+    symbolFilter: symbolFilter.value,
+    costBasisMin: costBasisMin.value,
+    costBasisMax: costBasisMax.value,
+    sortKey: sortKey.value,
+    sortDirection: sortDirection.value,
+  };
+
+  window.localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(payload));
+}
+
 function onSortChange(columnKey) {
   if (sortKey.value === columnKey) {
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
@@ -229,6 +294,20 @@ function onSortChange(columnKey) {
 
 const visibleLots = computed(() => {
   const normalizedFilter = symbolFilter.value.trim().toUpperCase();
+  const minCostBasisInput = Number.parseFloat(costBasisMin.value);
+  const maxCostBasisInput = Number.parseFloat(costBasisMax.value);
+  const hasMinCostBasis = Number.isFinite(minCostBasisInput);
+  const hasMaxCostBasis = Number.isFinite(maxCostBasisInput);
+
+  let minCostBasis = hasMinCostBasis ? minCostBasisInput : null;
+  let maxCostBasis = hasMaxCostBasis ? maxCostBasisInput : null;
+
+  if (minCostBasis !== null && maxCostBasis !== null && minCostBasis > maxCostBasis) {
+    const nextMin = maxCostBasis;
+    maxCostBasis = minCostBasis;
+    minCostBasis = nextMin;
+  }
+
   let nextLots = [...allLots.value];
 
   if (normalizedFilter) {
@@ -236,6 +315,22 @@ const visibleLots = computed(() => {
       const symbol = String(lot.symbol || '').toUpperCase();
       const description = String(lot.description || '').toUpperCase();
       return symbol.includes(normalizedFilter) || description.includes(normalizedFilter);
+    });
+  }
+
+  if (minCostBasis !== null || maxCostBasis !== null) {
+    nextLots = nextLots.filter((lot) => {
+      const lotCostBasis = Number(lot.costBasis || 0);
+
+      if (minCostBasis !== null && lotCostBasis < minCostBasis) {
+        return false;
+      }
+
+      if (maxCostBasis !== null && lotCostBasis > maxCostBasis) {
+        return false;
+      }
+
+      return true;
     });
   }
 
@@ -286,6 +381,7 @@ const computedSummary = computed(() => {
 });
 
 onMounted(async () => {
+  restoreFilterState();
   await loadMeta();
   await loadLots();
 });
@@ -293,6 +389,13 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   clearQuotePolling();
 });
+
+watch(
+  [selectedPreset, customFrom, customTo, symbolFilter, costBasisMin, costBasisMax, sortKey, sortDirection],
+  () => {
+    persistFilterState();
+  },
+);
 </script>
 
 <template>
@@ -328,6 +431,32 @@ onBeforeUnmount(() => {
           placeholder="AAPL, MSFT, VTI..."
         >
       </label>
+
+      <div class="costbasis-filter">
+        <label>
+          Min Cost Basis
+          <input
+            v-model="costBasisMin"
+            type="number"
+            inputmode="decimal"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+          >
+        </label>
+
+        <label>
+          Max Cost Basis
+          <input
+            v-model="costBasisMax"
+            type="number"
+            inputmode="decimal"
+            step="0.01"
+            min="0"
+            placeholder="5000.00"
+          >
+        </label>
+      </div>
     </section>
 
     <PortfolioSummary
@@ -415,6 +544,27 @@ h1 {
 }
 
 .symbol-search input {
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 0.5rem 0.64rem;
+  font-size: 0.85rem;
+}
+
+.costbasis-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.costbasis-filter label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.79rem;
+  color: var(--text-muted);
+}
+
+.costbasis-filter input {
+  width: 170px;
   border: 1px solid var(--border-soft);
   border-radius: 10px;
   padding: 0.5rem 0.64rem;
