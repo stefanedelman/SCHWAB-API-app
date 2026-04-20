@@ -258,7 +258,11 @@ function restoreFilterState() {
       costBasisMax.value = String(saved.costBasisMax);
     }
     if (typeof saved.sortKey === 'string') {
-      sortKey.value = saved.sortKey;
+      if (saved.sortKey === 'priceChangeDollar' || saved.sortKey === 'priceChangePct') {
+        sortKey.value = 'priceChange';
+      } else {
+        sortKey.value = saved.sortKey;
+      }
     }
     if (saved.sortDirection === 'asc' || saved.sortDirection === 'desc') {
       sortDirection.value = saved.sortDirection;
@@ -295,6 +299,19 @@ function onSortChange(columnKey) {
 
   sortKey.value = columnKey;
   sortDirection.value = columnKey === 'purchaseDate' ? 'desc' : 'asc';
+}
+
+function getSortableNumericValue(lot, key) {
+  if (key === 'priceChange') {
+    const quantity = Number(lot.quantity || 0);
+    if (!quantity) {
+      return 0;
+    }
+
+    return Number(lot.totalGainLoss || 0) / quantity;
+  }
+
+  return Number(lot[key] || 0);
 }
 
 const visibleLots = computed(() => {
@@ -349,9 +366,9 @@ const visibleLots = computed(() => {
       return (leftValue - rightValue) * directionFactor;
     }
 
-    if (['quantity', 'costPerShare', 'costBasis', 'currentPrice', 'marketValue', 'dayChange', 'totalGainLoss'].includes(key)) {
-      const leftValue = Number(left[key] || 0);
-      const rightValue = Number(right[key] || 0);
+    if (['quantity', 'costPerShare', 'costBasis', 'currentPrice', 'priceChange', 'marketValue', 'dayChange', 'totalGainLoss'].includes(key)) {
+      const leftValue = getSortableNumericValue(left, key);
+      const rightValue = getSortableNumericValue(right, key);
       return (leftValue - rightValue) * directionFactor;
     }
 

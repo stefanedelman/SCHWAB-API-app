@@ -34,6 +34,7 @@ const columns = [
   { key: 'costPerShare', label: 'Cost/Share' },
   { key: 'costBasis', label: 'Cost Basis' },
   { key: 'currentPrice', label: 'Price' },
+  { key: 'priceChange', label: 'Price Chng' },
   { key: 'marketValue', label: 'Mkt Value' },
   { key: 'dayChange', label: 'Day Chg' },
   { key: 'totalGainLoss', label: 'Gain/Loss' },
@@ -151,6 +152,31 @@ function sortArrow(columnKey) {
 
   return props.sortDirection === 'asc' ? '↑' : '↓';
 }
+
+function lotPriceChangeDollar(lot) {
+  const quantity = Number(lot.quantity || 0);
+  if (!quantity) {
+    return 0;
+  }
+
+  return Number(lot.totalGainLoss || 0) / quantity;
+}
+
+function lotPriceChangePct(lot) {
+  return Number(lot.totalGainLossPct || 0);
+}
+
+function groupPriceChangeDollar(group) {
+  if (!group.quantityTotal) {
+    return 0;
+  }
+
+  return Number(group.totalGainLossTotal || 0) / Number(group.quantityTotal || 0);
+}
+
+function groupPriceChangePct(group) {
+  return Number(group.totalGainLossPct || 0);
+}
 </script>
 
 <template>
@@ -186,6 +212,10 @@ function sortArrow(columnKey) {
             <td>{{ formatCurrency(group.costPerShareAvg) }}</td>
             <td>{{ formatCurrency(group.costBasisTotal) }}</td>
             <td>{{ formatCurrency(group.currentPriceAvg) }}</td>
+            <td :class="groupPriceChangeDollar(group) > 0 ? 'positive' : groupPriceChangeDollar(group) < 0 ? 'negative' : 'neutral'">
+              {{ formatSignedCurrency(groupPriceChangeDollar(group)) }}
+              <span>{{ formatPercent(groupPriceChangePct(group)) }}</span>
+            </td>
             <td>{{ formatCurrency(group.marketValueTotal) }}</td>
             <td :class="group.dayChangeTotal > 0 ? 'positive' : group.dayChangeTotal < 0 ? 'negative' : 'neutral'">
               {{ formatSignedCurrency(group.dayChangeTotal) }}
@@ -214,6 +244,10 @@ function sortArrow(columnKey) {
                       <td>{{ formatCurrency(lot.costPerShare) }}</td>
                       <td>{{ formatCurrency(lot.costBasis) }}</td>
                       <td>{{ formatCurrency(lot.currentPrice) }}</td>
+                      <td :class="lotPriceChangeDollar(lot) > 0 ? 'positive' : lotPriceChangeDollar(lot) < 0 ? 'negative' : 'neutral'">
+                        {{ formatSignedCurrency(lotPriceChangeDollar(lot)) }}
+                        <span>{{ formatPercent(lotPriceChangePct(lot)) }}</span>
+                      </td>
                       <td>{{ formatCurrency(lot.marketValue) }}</td>
                       <td :class="lot.dayChange > 0 ? 'positive' : lot.dayChange < 0 ? 'negative' : 'neutral'">
                         {{ formatSignedCurrency(lot.dayChange) }}
