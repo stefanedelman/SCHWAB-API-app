@@ -263,6 +263,28 @@ function hasValidSession() {
   return true;
 }
 
+function getAccessTokenExpiryMs(tokenData) {
+  const expiry = parseTime(tokenData.accessTokenExpiresAt);
+  if (!expiry) {
+    return 0;
+  }
+
+  return expiry.getTime() - Date.now();
+}
+
+async function getValidAccessToken() {
+  if (!hasValidSession()) {
+    throw new Error('Not authenticated. Complete Schwab login first.');
+  }
+
+  if (getAccessTokenExpiryMs(tokenStore) <= ACCESS_REFRESH_HEADROOM_MS) {
+    await refreshAccessToken();
+    scheduleRefresh();
+  }
+
+  return tokenStore.accessToken;
+}
+
 function getAuthStatus() {
   if (!hasRequiredConfig()) {
     return {
@@ -359,6 +381,7 @@ module.exports = {
   clearSession,
   exchangeAuthorizationCode,
   getAuthStatus,
+  getValidAccessToken,
   getLoginUrl,
   initializeAuthService,
 };

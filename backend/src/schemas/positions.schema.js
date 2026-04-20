@@ -5,29 +5,29 @@ const InstrumentSchema = z.object({
   cusip: z.string().optional(),
   symbol: z.string(),
   description: z.string().optional().default(''),
-});
+}).passthrough();
 
 const PositionSchema = z.object({
-  shortQuantity: z.number().default(0),
-  averagePrice: z.number().default(0),
-  currentDayProfitLoss: z.number().default(0),
-  currentDayProfitLossPercentage: z.number().default(0),
-  longQuantity: z.number().default(0),
-  marketValue: z.number().default(0),
+  shortQuantity: z.coerce.number().default(0),
+  averagePrice: z.coerce.number().default(0),
+  currentDayProfitLoss: z.coerce.number().default(0),
+  currentDayProfitLossPercentage: z.coerce.number().default(0),
+  longQuantity: z.coerce.number().default(0),
+  marketValue: z.coerce.number().default(0),
   instrument: InstrumentSchema,
-});
+}).passthrough();
 
 const PositionsResponseSchema = z.object({
   securitiesAccount: z.object({
     accountNumber: z.string(),
     currentBalances: z.object({
-      liquidationValue: z.number(),
-      cashBalance: z.number(),
-      availableFunds: z.number(),
+      liquidationValue: z.coerce.number(),
+      cashBalance: z.coerce.number(),
+      availableFunds: z.coerce.number(),
     }),
     positions: z.array(PositionSchema).default([]),
-  }),
-});
+  }).passthrough(),
+}).passthrough();
 
 module.exports = {
   PositionsResponseSchema,

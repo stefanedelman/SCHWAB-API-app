@@ -206,6 +206,10 @@ function filterLotsByDate(lots, from, to) {
 
 async function buildLotsResponse({ from, to }) {
   const payloads = await loadMockPayloads();
+  return buildLotsResponseFromPayloads(payloads, { from, to });
+}
+
+function buildLotsResponseFromPayloads(payloads, { from, to }) {
 
   const positions = payloads.positions.securitiesAccount.positions.filter(
     (position) => position.instrument.assetType === 'EQUITY' && Number(position.longQuantity) > 0,
@@ -345,6 +349,7 @@ async function getQuotesForSymbols(symbols) {
 }
 
 module.exports = {
+  buildLotsResponseFromPayloads,
   buildLotsResponse,
   getAccountSummary,
   getQuotesForSymbols,

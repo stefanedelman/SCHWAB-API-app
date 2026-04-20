@@ -9,6 +9,11 @@ const {
   getQuotesForSymbols,
 } = require('./services/mock-data.service');
 const {
+  buildLiveLotsResponse,
+  getLiveAccountSummary,
+  getLiveQuotesForSymbols,
+} = require('./services/live-data.service');
+const {
   clearSession,
   exchangeAuthorizationCode,
   getAuthStatus,
@@ -24,15 +29,20 @@ const IS_MOCK_MODE = (process.env.SCHWAB_MOCK || 'true').toLowerCase() === 'true
 
 app.use(express.json());
 
-function ensureMockMode(_req, res, next) {
-  if (!IS_MOCK_MODE) {
-    return res.status(501).json({
-      error: 'live_mode_not_implemented',
-      message: 'Live Schwab integration is not wired yet. Set SCHWAB_MOCK=true for local development.',
-    });
+function extractCodeFromInput(input) {
+  const value = String(input || '').trim();
+  if (!value) {
+    return '';
   }
 
-  return next();
+  try {
+    const parsed = new URL(value);
+    return parsed.searchParams.get('code') || '';
+  } catch {
+    const query = value.includes('?') ? value.slice(value.indexOf('?') + 1) : value;
+    const params = new URLSearchParams(query);
+    return params.get('code') || '';
+  }
 }
 
 app.get('/health', (_req, res) => {
@@ -89,6 +99,36 @@ app.get('/auth/callback', async (req, res, next) => {
   }
 });
 
+app.post('/auth/complete', async (req, res, next) => {
+  if (IS_MOCK_MODE) {
+    return res.status(409).json({
+      error: 'mock_mode_enabled',
+      message: 'SCHWAB_MOCK is true. Set SCHWAB_MOCK=false to use OAuth callback.',
+    });
+  }
+
+  try {
+    const code = String(req.body?.code || '').trim() || extractCodeFromInput(req.body?.callbackUrl);
+
+    if (!code) {
+      return res.status(400).json({
+        error: 'missing_code',
+        message: 'No OAuth code was found. Paste the full Schwab redirect URL or provide code directly.',
+      });
+    }
+
+    const token = await exchangeAuthorizationCode(code);
+    return res.json({
+      ok: true,
+      authenticated: true,
+      accessTokenExpiresAt: token.accessTokenExpiresAt,
+      refreshTokenExpiresAt: token.refreshTokenExpiresAt,
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.get('/auth/status', (_req, res) => {
   if (IS_MOCK_MODE) {
     return res.json({
@@ -116,9 +156,14 @@ app.post('/auth/logout', async (_req, res, next) => {
   }
 });
 
-app.get('/api/lots', ensureMockMode, async (req, res, next) => {
+app.get('/api/lots', async (req, res, next) => {
   try {
-    const payload = await buildLotsResponse({
+    const payload = IS_MOCK_MODE
+      ? await buildLotsResponse({
+        from: req.query.from,
+        to: req.query.to,
+      })
+      : await buildLiveLotsResponse({
       from: req.query.from,
       to: req.query.to,
     });
@@ -129,23 +174,27 @@ app.get('/api/lots', ensureMockMode, async (req, res, next) => {
   }
 });
 
-app.get('/api/quotes', ensureMockMode, async (req, res, next) => {
+app.get('/api/quotes', async (req, res, next) => {
   try {
     const symbols = String(req.query.symbols || '')
       .split(',')
       .map((symbol) => symbol.trim())
       .filter(Boolean);
 
-    const quotes = await getQuotesForSymbols(symbols);
+    const quotes = IS_MOCK_MODE
+      ? await getQuotesForSymbols(symbols)
+      : await getLiveQuotesForSymbols(symbols);
     res.json({ quotes });
   } catch (error) {
     next(error);
   }
 });
 
-app.get('/api/account/summary', ensureMockMode, async (_req, res, next) => {
+app.get('/api/account/summary', async (_req, res, next) => {
   try {
-    const summary = await getAccountSummary();
+    const summary = IS_MOCK_MODE
+      ? await getAccountSummary()
+      : await getLiveAccountSummary();
     res.json(summary);
   } catch (error) {
     next(error);
