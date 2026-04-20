@@ -76,23 +76,21 @@ const groupedLots = computed(() => {
     group.weightedPriceTotal += Number(lot.currentPrice || 0) * quantity;
   });
 
-  return Array.from(bySymbol.values())
-    .map((group) => {
-      const previousMarketValue = group.marketValueTotal - group.dayChangeTotal;
+  return Array.from(bySymbol.values()).map((group) => {
+    const previousMarketValue = group.marketValueTotal - group.dayChangeTotal;
 
-      return {
-        ...group,
-        currentPriceAvg: group.quantityTotal ? group.weightedPriceTotal / group.quantityTotal : 0,
-        costPerShareAvg: group.quantityTotal ? group.costBasisTotal / group.quantityTotal : 0,
-        totalGainLossPct: group.costBasisTotal
-          ? (group.totalGainLossTotal / group.costBasisTotal) * 100
-          : 0,
-        dayChangePct: previousMarketValue
-          ? (group.dayChangeTotal / previousMarketValue) * 100
-          : 0,
-      };
-    })
-    .sort((left, right) => left.symbol.localeCompare(right.symbol));
+    return {
+      ...group,
+      currentPriceAvg: group.quantityTotal ? group.weightedPriceTotal / group.quantityTotal : 0,
+      costPerShareAvg: group.quantityTotal ? group.costBasisTotal / group.quantityTotal : 0,
+      totalGainLossPct: group.costBasisTotal
+        ? (group.totalGainLossTotal / group.costBasisTotal) * 100
+        : 0,
+      dayChangePct: previousMarketValue
+        ? (group.dayChangeTotal / previousMarketValue) * 100
+        : 0,
+    };
+  });
 });
 
 const allSymbols = computed(() => groupedLots.value.map((group) => group.symbol));
