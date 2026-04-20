@@ -205,6 +205,11 @@ async function onPresetChange(preset) {
 
   if (preset !== 'CUSTOM') {
     await loadLots();
+    return;
+  }
+
+  if (customFrom.value || customTo.value) {
+    await loadLots();
   }
 }
 
@@ -246,11 +251,11 @@ function restoreFilterState() {
     if (typeof saved.symbolFilter === 'string') {
       symbolFilter.value = saved.symbolFilter;
     }
-    if (typeof saved.costBasisMin === 'string') {
-      costBasisMin.value = saved.costBasisMin;
+    if (typeof saved.costBasisMin === 'string' || typeof saved.costBasisMin === 'number') {
+      costBasisMin.value = String(saved.costBasisMin);
     }
-    if (typeof saved.costBasisMax === 'string') {
-      costBasisMax.value = saved.costBasisMax;
+    if (typeof saved.costBasisMax === 'string' || typeof saved.costBasisMax === 'number') {
+      costBasisMax.value = String(saved.costBasisMax);
     }
     if (typeof saved.sortKey === 'string') {
       sortKey.value = saved.sortKey;
@@ -394,6 +399,9 @@ watch(
   [selectedPreset, customFrom, customTo, symbolFilter, costBasisMin, costBasisMax, sortKey, sortDirection],
   () => {
     persistFilterState();
+  },
+  {
+    flush: 'sync',
   },
 );
 </script>
