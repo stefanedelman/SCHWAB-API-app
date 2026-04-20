@@ -112,7 +112,7 @@ async function logout() {
 
       <div v-if="!authStatus.authenticated && authStatus.mode !== 'mock'" class="complete-shell">
         <label class="complete-label" for="callback-url">
-          After Schwab redirects back, paste the full URL here:
+          If auto-login does not complete, paste the full redirected URL here:
         </label>
         <div class="complete-row">
           <input

@@ -1,7 +1,7 @@
 const API_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.PROD ? '/backend' : '');
 
-async function fetchJson(path) {
-  const response = await fetch(`${API_BASE}${path}`);
+async function fetchJson(path, options = {}) {
+  const response = await fetch(`${API_BASE}${path}`, options);
 
   if (!response.ok) {
     let details = '';
@@ -48,4 +48,14 @@ export async function fetchAccountSummary() {
 
 export async function fetchAuthStatus() {
   return fetchJson('/auth/status');
+}
+
+export async function completeAuth({ code, callbackUrl } = {}) {
+  return fetchJson('/auth/complete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ code, callbackUrl }),
+  });
 }

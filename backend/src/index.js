@@ -26,6 +26,9 @@ dotenv.config({ path: path.resolve(__dirname, '..', '..', '.env') });
 const app = express();
 const PORT = process.env.BACKEND_PORT || process.env.PORT || 3001;
 const IS_MOCK_MODE = (process.env.SCHWAB_MOCK || 'true').toLowerCase() === 'true';
+const AUTH_SUCCESS_REDIRECT = process.env.AUTH_SUCCESS_REDIRECT
+  || process.env.FRONTEND_ORIGIN
+  || (process.env.NODE_ENV === 'production' ? '/' : 'https://127.0.0.1:5173/');
 
 app.use(express.json());
 
@@ -43,6 +46,11 @@ function extractCodeFromInput(input) {
     const params = new URLSearchParams(query);
     return params.get('code') || '';
   }
+}
+
+function withQueryParam(url, key, value) {
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}${key}=${encodeURIComponent(String(value || ''))}`;
 }
 
 app.get('/health', (_req, res) => {
@@ -88,13 +96,24 @@ app.get('/auth/callback', async (req, res, next) => {
 
   try {
     const token = await exchangeAuthorizationCode(req.query.code);
-    return res.json({
-      ok: true,
-      authenticated: true,
-      accessTokenExpiresAt: token.accessTokenExpiresAt,
-      refreshTokenExpiresAt: token.refreshTokenExpiresAt,
-    });
+
+    if (String(req.query.raw || '') === '1') {
+      return res.json({
+        ok: true,
+        authenticated: true,
+        accessTokenExpiresAt: token.accessTokenExpiresAt,
+        refreshTokenExpiresAt: token.refreshTokenExpiresAt,
+      });
+    }
+
+    return res.redirect(AUTH_SUCCESS_REDIRECT);
   } catch (error) {
+    const acceptsHtml = String(req.headers.accept || '').includes('text/html');
+
+    if (acceptsHtml && String(req.query.raw || '') !== '1') {
+      return res.redirect(withQueryParam(AUTH_SUCCESS_REDIRECT, 'authError', error.message || 'OAuth callback failed'));
+    }
+
     return next(error);
   }
 });

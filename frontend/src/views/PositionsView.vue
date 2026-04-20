@@ -6,7 +6,13 @@ import DateRangeFilter from '../components/DateRangeFilter.vue';
 import MarketStatusBadge from '../components/MarketStatusBadge.vue';
 import PortfolioSummary from '../components/PortfolioSummary.vue';
 import PositionsTable from '../components/PositionsTable.vue';
-import { fetchAccountSummary, fetchAuthStatus, fetchLots, fetchQuotes } from '../services/api';
+import {
+  completeAuth,
+  fetchAccountSummary,
+  fetchAuthStatus,
+  fetchLots,
+  fetchQuotes,
+} from '../services/api';
 
 function round2(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
@@ -226,6 +232,41 @@ async function onApplyCustomRange() {
   await loadLots();
 }
 
+function clearOauthQueryParams() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const url = new URL(window.location.href);
+  ['code', 'session', 'state'].forEach((key) => url.searchParams.delete(key));
+  const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+  window.history.replaceState({}, '', nextUrl || '/');
+}
+
+async function completeOauthFromUrlIfPresent() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get('code');
+
+  if (!code) {
+    return;
+  }
+
+  try {
+    await completeAuth({
+      code,
+      callbackUrl: url.toString(),
+    });
+  } catch (error) {
+    errorMessage.value = error.message || 'Failed to complete OAuth login.';
+  } finally {
+    clearOauthQueryParams();
+  }
+}
+
 function restoreFilterState() {
   if (typeof window === 'undefined') {
     return;
@@ -403,6 +444,7 @@ const computedSummary = computed(() => {
 });
 
 onMounted(async () => {
+  await completeOauthFromUrlIfPresent();
   restoreFilterState();
   await loadMeta();
   await loadLots();
