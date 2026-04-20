@@ -11,6 +11,8 @@ defineProps({
 const callbackUrl = ref('');
 const completeLoading = ref(false);
 const completeError = ref('');
+const logoutLoading = ref(false);
+const logoutError = ref('');
 const AUTH_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.PROD ? '/backend' : '');
 const authLoginHref = `${AUTH_BASE}/auth/login`;
 
@@ -45,6 +47,28 @@ async function completeOauth() {
     completeLoading.value = false;
   }
 }
+
+async function logout() {
+  logoutLoading.value = true;
+  logoutError.value = '';
+
+  try {
+    const response = await fetch(`${AUTH_BASE}/auth/logout`, {
+      method: 'POST',
+    });
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      throw new Error(payload?.message || payload?.error || 'Failed to log out.');
+    }
+
+    window.location.reload();
+  } catch (error) {
+    logoutError.value = error.message || 'Failed to log out.';
+  } finally {
+    logoutLoading.value = false;
+  }
+}
 </script>
 
 <template>
@@ -73,6 +97,18 @@ async function completeOauth() {
       >
         Login with Schwab
       </a>
+
+      <button
+        v-if="authStatus.authenticated && authStatus.mode !== 'mock'"
+        type="button"
+        class="auth-action logout-action"
+        :disabled="logoutLoading"
+        @click="logout"
+      >
+        {{ logoutLoading ? 'Logging Out...' : 'Logout' }}
+      </button>
+
+      <p v-if="logoutError" class="auth-error">{{ logoutError }}</p>
 
       <div v-if="!authStatus.authenticated && authStatus.mode !== 'mock'" class="complete-shell">
         <label class="complete-label" for="callback-url">
@@ -134,6 +170,27 @@ async function completeOauth() {
 
 .auth-action:hover {
   background: rgba(20, 90, 114, 0.08);
+}
+
+.auth-action:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.logout-action {
+  border-color: rgba(122, 36, 36, 0.45);
+  color: #7b1f1f;
+}
+
+.logout-action:hover {
+  background: rgba(123, 31, 31, 0.08);
+}
+
+.auth-error {
+  width: 100%;
+  margin: 0;
+  font-size: 0.76rem;
+  color: #7b1f1f;
 }
 
 .complete-shell {
