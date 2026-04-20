@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || '';
+const API_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.PROD ? '/backend' : '');
 
 async function fetchJson(path) {
   const response = await fetch(`${API_BASE}${path}`);
